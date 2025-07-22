@@ -5,7 +5,7 @@ from typing import Dict, List
 from config import BINANCE_API_KEY, BINANCE_API_SECRET, TESTNET, MAX_LEVERAGE
 
 class BinanceClient:
-    """Light wrapper around python‑binance AsyncClient with hedge‑mode helpers."""
+    """Light wrapper around python-binance AsyncClient with hedge-mode helpers."""
 
     def __init__(self):
         self.client: AsyncClient | None = None
@@ -17,16 +17,12 @@ class BinanceClient:
             testnet=TESTNET,
         )
 
-        # 啟用 Hedge Mode：只需 signed=True，timestamp 自動處理
-        await self.client._request_futures_api(
-            method="post",
-            path="positionSide/dual",
-            data={
-                "dualSidePosition": "true"
-            },
-            signed=True  # ✅ 自動加入 timestamp 與 signature
-        )
-        print("[INFO] Hedge mode enabled")
+        # ✅ 使用公開 API 正確設定 hedge mode
+        res = await self.client.futures_position_side_dual(True)
+        if res.get("code") == 200:
+            print("[INFO] Hedge mode enabled")
+        else:
+            print("[ERROR] Failed to enable hedge mode:", res)
 
     async def set_leverage(self, symbol: str, leverage: int = MAX_LEVERAGE):
         try:
