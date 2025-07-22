@@ -1,3 +1,4 @@
+import time
 import asyncio
 from binance import AsyncClient, BinanceSocketManager
 from decimal import Decimal
@@ -55,3 +56,19 @@ class BinanceClient:
                 msg = await stream.recv()
                 if msg:
                     yield msg
+async def initialize(self):
+    self.client = await AsyncClient.create(
+        BINANCE_API_KEY, BINANCE_API_SECRET,
+        testnet=TESTNET,
+    )
+
+    # 加入 timestamp 參數（必須為毫秒）
+    await self.client._request_futures_api(
+        method="post",
+        path="positionSide/dual",
+        data={
+            "dualSidePosition": "true",
+            "timestamp": int(time.time() * 1000)
+        },
+    )
+    print("[INFO] Hedge mode enabled")
