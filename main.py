@@ -35,44 +35,44 @@ async def main():
             await hedger.open_dual(s)
 
         async for msg in client.price_stream(symbols):
-            if msg["e"] != "kline":
-                continue
+            try:
+                if msg["e"] != "kline":
+                    continue
 
-            sym = msg["s"]
-            k   = msg["k"]
+                sym = msg["s"]
+                k   = msg["k"]
 
-            if not k["x"]:  # closed candle only
-                continue
+                if not k["x"]:  # closed candle only
+                    continue
 
-            KLINE_CACHE[sym].append({
-                "open": k["o"], "high": k["h"], "low": k["l"], "close": k["c"],
-            })
+                KLINE_CACHE[sym].append({
+                    "open": k["o"], "high": k["h"], "low": k["l"], "close": k["c"],
+                })
 
-            df = await kline_to_df(KLINE_CACHE[sym][-60:])  # last 60 mins
-            long_sig, short_sig, adx_val = trend_signal(df)
-            long_rev, short_rev = revert_signal(df)
-            price = Decimal(df["close"].iloc[-1])
+                df = await kline_to_df(KLINE_CACHE[sym][-60:])  # last 60 mins
+                long_sig, short_sig, adx_val = trend_signal(df)
+                long_rev, short_rev = revert_signal(df)
+                price = Decimal(df["close"].iloc[-1])
 
-            # breakout logic
-            hedge_state = hedger.active_hedges.get(sym)
-            if hedge_state:
-                entry = hedge_state["entry_price"]
-                trigger = abs((price - entry) / entry)
+                # breakout logic
+                hedge_state = hedger.active_hedges.get(sym)
+                if hedge_state:
+                    entry = hedge_state["entry_price"]
+                    trigger = abs((price - entry) / entry)
 
-                if trigger >= Decimal("0.005") or adx_val > 25:
-                    direction = "LONG" if price > entry else "SHORT"
-                    await hedger.close_side(sym, "SHORT" if direction == "LONG" else "LONG")
-                    await pyramider.try_add(sym, direction, price)
+                    if trigger >= Decimal("0.005") or adx_val > 25:
+                        direction = "LONG" if price > entry else "SHORT"
+                        await hedger.close_side(sym, "SHORT" if direction == "LONG" else "LONG")
+                        await pyramider.try_add(sym, direction, price)
 
-            # risk modulation every 30 closed candles (~30 min)
-            if len(KLINE_CACHE[sym]) % 30 == 0:
-                equity = await client.get_account_balance()
-                risk.update_equity(equity)
-
+                # every 30 closed candles (~30 min)
+                if len(KLINE_CACHE[sym]) >= 30 and len(KLINE_CACHE[sym]) % 30 == 0:
+                    equity = await client.get_account_balance()
+                    risk.update_equity(equity)
+            except Exception as e:
+                print(f"[ERROR] Error processing message: {e}")
     finally:
-        # 確保不論是否錯誤，最後都會關閉 client
         await client.close()
 
 if __name__ == "__main__":
     asyncio.run(main())
-
