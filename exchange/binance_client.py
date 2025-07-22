@@ -12,15 +12,18 @@ class BinanceClient:
         self.client: AsyncClient | None = None
         self._tickers: Dict[str, Dict] = {}
 
-    async def initialize(self):  # ← 要寫在 class 裡面！
+    async def initialize(self):
         self.client = await AsyncClient.create(
             BINANCE_API_KEY, BINANCE_API_SECRET,
             testnet=TESTNET,
         )
         await self.client._request_futures_api(
-            method="post"
+            method="post",
             path="positionSide/dual",
-            data={"dualSidePosition": "true"},
+            data={
+                "dualSidePosition": "true",
+                "timestamp": int(time.time() * 1000)
+            },
         )
         print("[INFO] Hedge mode enabled")
 
@@ -56,19 +59,7 @@ class BinanceClient:
                 msg = await stream.recv()
                 if msg:
                     yield msg
-async def initialize(self):
-    self.client = await AsyncClient.create(
-        BINANCE_API_KEY, BINANCE_API_SECRET,
-        testnet=TESTNET,
-    )
 
-    # 加入 timestamp 參數（必須為毫秒）
-    await self.client._request_futures_api(
-        method="post",
-        path="positionSide/dual",
-        data={
-            "dualSidePosition": "true",
-            "timestamp": int(time.time() * 1000)
-        },
-    )
-    print("[INFO] Hedge mode enabled")
+    async def close(self):
+        if self.client:
+            await self.client.close()
