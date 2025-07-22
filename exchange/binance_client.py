@@ -17,7 +17,7 @@ class BinanceClient:
             testnet=TESTNET,
         )
         await self.client._request_futures_api(
-            method="POST",
+            method="POST",# ✅ 使用小寫
             path="positionSide/dual",
             data={"dualSidePosition": "true"},
         )
