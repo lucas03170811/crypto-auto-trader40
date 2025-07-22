@@ -11,21 +11,18 @@ class BinanceClient:
         self.client: AsyncClient | None = None
         self._tickers: Dict[str, Dict] = {}
 
-    # ---------- Init ----------
-async def initialize(self):
-    self.client = await AsyncClient.create(
-        BINANCE_API_KEY, BINANCE_API_SECRET,
-        testnet=TESTNET,
-    )
-    # 使用手動方式啟用 hedge mode
-    await self.client._request_futures_api(
-        method="POST",
-        path="positionSide/dual",
-        data={"dualSidePosition": "true"},
-    )
-    print("[INFO] Hedge mode enabled")
+    async def initialize(self):  # ← 要寫在 class 裡面！
+        self.client = await AsyncClient.create(
+            BINANCE_API_KEY, BINANCE_API_SECRET,
+            testnet=TESTNET,
+        )
+        await self.client._request_futures_api(
+            method="POST",
+            path="positionSide/dual",
+            data={"dualSidePosition": "true"},
+        )
+        print("[INFO] Hedge mode enabled")
 
-    # ---------- REST helpers ----------
     async def set_leverage(self, symbol: str, leverage: int = MAX_LEVERAGE):
         try:
             await self.client.futures_change_leverage(symbol=symbol, leverage=leverage)
@@ -50,9 +47,7 @@ async def initialize(self):
         usdt = next(b for b in info if b["asset"] == "USDT")
         return Decimal(usdt["balance"])
 
-    # ---------- WS stream ----------
     async def price_stream(self, symbols: List[str]):
-        """Yield kline messages (1 m) for the provided symbols."""
         bm = BinanceSocketManager(self.client)
         streams = [f"{s.lower()}@kline_1m" for s in symbols]
         async with bm.futures_multiplex_socket(streams) as stream:
