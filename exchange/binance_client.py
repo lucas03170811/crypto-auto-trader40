@@ -12,15 +12,18 @@ class BinanceClient:
         self._tickers: Dict[str, Dict] = {}
 
     # ---------- Init ----------
-    async def initialize(self):
-        self.client = await AsyncClient.create(
-            BINANCE_API_KEY, BINANCE_API_SECRET,
-            testnet=TESTNET,
-        )
-        # enable hedge mode once per account
-        await self.client.futures_position_mode_change(dualSidePosition=True)
-        print("[INFO] Hedge mode enabled")
-
+   async def initialize(self):
+    self.client = await AsyncClient.create(
+        BINANCE_API_KEY, BINANCE_API_SECRET,
+        testnet=TESTNET,
+    )
+    # use raw request to enable hedge mode
+    await self.client._request_futures_api(
+        "POST",
+        "positionSide/dual",
+        data={"dualSidePosition": "true"},
+    )
+    print("[INFO] Hedge mode enabled")
     # ---------- REST helpers ----------
     async def set_leverage(self, symbol: str, leverage: int = MAX_LEVERAGE):
         try:
