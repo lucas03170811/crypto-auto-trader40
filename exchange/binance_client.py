@@ -17,6 +17,8 @@ class BinanceClient:
             BINANCE_API_KEY, BINANCE_API_SECRET,
             testnet=TESTNET,
         )
+
+        # 啟用 Hedge Mode：一定要加上 timestamp 與 signed=True
         await self.client._request_futures_api(
             method="post",
             path="positionSide/dual",
@@ -24,6 +26,7 @@ class BinanceClient:
                 "dualSidePosition": "true",
                 "timestamp": int(time.time() * 1000)
             },
+            signed=True  # ✅ 必加，否則報 signature error
         )
         print("[INFO] Hedge mode enabled")
 
