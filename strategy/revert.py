@@ -1,14 +1,17 @@
 import pandas as pd
+
 import pandas_ta as ta
-from decimal import Decimal
 
 def revert_signal(df: pd.DataFrame):
-    """Return mean‑revert (long, short) booleans."""
-    bb = ta.bbands(df["close"], length=20)
-    rsi = ta.rsi(df["close"], length=14).iloc[-1]
-    price = Decimal(df["close"].iloc[-1])
+    """Return mean​-revert (long, short) booleans."""
+    df.ta.bbands(length=20, append=True)
+    df.ta.rsi(length=14, append=True)
 
-    lower, upper = bb["BBL_20_2.0"].iloc[-1], bb["BBU_20_2.0"].iloc[-1]
+    price = Decimal(df["close"].iloc[-1])
+    lower = df["BBL_20_2.0"].iloc[-1]
+    upper = df["BBU_20_2.0"].iloc[-1]
+    rsi = df["RSI_14"].iloc[-1]
+
     long  = (price < Decimal(lower)) and (rsi < 25)
     short = (price > Decimal(upper)) and (rsi > 75)
     return long, short
