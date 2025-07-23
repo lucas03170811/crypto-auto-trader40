@@ -1,5 +1,6 @@
 python-binance==1.0.19
 aiohttp==3.9.5
 pandas==2.2.2
+git+https://github.com/twopirllc/pandas-ta.git@master
 ccxt==4.3.34
 numpy==1.26.4
