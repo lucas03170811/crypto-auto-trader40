@@ -3,7 +3,7 @@ from exchange.binance_client import BinanceClient
 from config import MAX_LEVERAGE
 
 class HedgeEngine:
-    """Manage dual‑side hedge entries and exits."""
+    """Manage dual​-side hedge entries and exits."""
 
     def __init__(self, client: BinanceClient, risk_mgr):
         self.client = client
@@ -13,12 +13,12 @@ class HedgeEngine:
     async def open_dual(self, symbol: str):
         price = await self._get_price(symbol)
         qty = (self.risk_mgr.base_qty * MAX_LEVERAGE) / price
-        qty = round(float(qty), 3)
+        qty = qty.quantize(Decimal("0.001"))
         await self.client.place_order(symbol, "BUY",  "LONG",  qty)
         await self.client.place_order(symbol, "SELL", "SHORT", qty)
         self.active_hedges[symbol] = {
             "entry_price": price,
-            "qty": Decimal(qty),
+            "qty": qty,
         }
         print(f"[HEDGE] Opened dual {symbol} qty={qty}")
 
