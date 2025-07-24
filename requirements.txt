@@ -3,5 +3,6 @@ aiohttp==3.9.5
 pandas==2.2.2
 ccxt==4.3.34
 numpy==1.26.4
-git+https://github.com/twopirllc/pandas-ta.git@master#egg=pandas_ta
+pandas-ta==0.3.14b0
+
 
