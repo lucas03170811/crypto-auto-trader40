@@ -1,4 +1,5 @@
 import asyncio
+import time
 from binance import AsyncClient, BinanceSocketManager
 from decimal import Decimal
 from typing import Dict, List
@@ -17,13 +18,13 @@ class BinanceClient:
             testnet=TESTNET,
         )
 
-        # 啟用 Hedge Mode（需簽名與 timestamp）
+        # 啟用 Hedge Mode（用當前時間戳替代 _get_timestamp）
         res = await self.client._request_futures_api(
             method="post",
             path="positionSide/dual",
             data={
                 "dualSidePosition": "true",
-                "timestamp": self.client._get_timestamp()
+                "timestamp": int(time.time() * 1000)  # ✅ 替代 _get_timestamp()
             },
             signed=True
         )
@@ -64,4 +65,4 @@ class BinanceClient:
 
     async def close(self):
         if self.client:
-            await self.client.close()
+            await self.client.close_connection()  # ✅ 正確關閉連線
