@@ -6,8 +6,8 @@ BINANCE_API_SECRET = os.getenv("BINANCE_API_SECRET")
 
 TESTNET = bool(int(os.getenv("TESTNET", "0")))
 BASE_QTY = Decimal(os.getenv("BASE_QTY", "2"))       # 每次下單金額
-MAX_LEVERAGE = int(os.getenv("MAX_LEVERAGE", "10"))
-MAX_PYRAMID_LAYERS = int(os.getenv("MAX_PYRAMID_LAYERS", "3"))
+MAX_LEVERAGE = int(os.getenv("MAX_LEVERAGE", "20"))
+MAX_PYRAMID_LAYERS = int(os.getenv("MAX_PYRAMID_LAYERS", "4"))
 
 # ✅ 放寬風控條件（方便初期觀察）
 RISK_SHRINK_THRESHOLD = Decimal("-0.20")  # 下跌 10% 縮倉
