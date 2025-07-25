@@ -29,7 +29,6 @@ class SymbolFilter:
             if isinstance(res, Exception):
                 continue
             funding, volume = res
-            # ✅ 請確保這裡是 8 個空格（或 2 個 tab 都行，但不能混用）
             print(f"[DEBUG] {sym}: funding={funding}, volume={volume}")
             if funding >= FUNDING_RATE_MIN and volume >= VOLUME_MIN_USD:
                 approved.append(sym)
