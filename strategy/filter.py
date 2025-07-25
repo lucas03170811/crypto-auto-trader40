@@ -5,6 +5,7 @@ from typing import List
 from config import FUNDING_RATE_MIN, VOLUME_MIN_USD, SYMBOL_POOL
 from exchange.binance_client import BinanceClient
 
+
 class SymbolFilter:
     """Screen symbols by funding‑rate and 24 h volume."""
 
