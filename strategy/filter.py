@@ -29,7 +29,6 @@ class SymbolFilter:
             if isinstance(res, Exception):
                 continue
             funding, volume = res
-            print(f"[DEBUG] {sym}: funding={funding}, volume={volume}")
             if funding >= FUNDING_RATE_MIN and volume >= VOLUME_MIN_USD:
                 approved.append(sym)
 
