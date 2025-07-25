@@ -29,8 +29,8 @@ class SymbolFilter:
             if isinstance(res, Exception):
                 continue
             funding, volume = res
-            # 在篩選幣種時加上 DEBUG 訊息
-print(f"[DEBUG] {symbol}: funding={funding}, volume={volume}")
+            # ✅ 正確縮排的 DEBUG 訊息
+            print(f"[DEBUG] {sym}: funding={funding}, volume={volume}")
             if funding >= FUNDING_RATE_MIN and volume >= VOLUME_MIN_USD:
                 approved.append(sym)
 
