@@ -15,7 +15,7 @@ RISK_GROW_THRESHOLD   = Decimal("0.20")   # 上漲 20% 擴倉
 
 # ✅ 調整幣種篩選條件（放寬成交量與 funding）
 FUNDING_RATE_MIN = Decimal("-0.002")       # 可接受略為負值的資金費率
-VOLUME_MIN_USD   = Decimal("10000000")     # 降低為 1000 萬，增加篩選機率
+VOLUME_MIN_USD   = Decimal("5000000")     # 降低為 1000 萬，增加篩選機率
 
 # ✅ 擴大觀察幣池
 SYMBOL_POOL = [
