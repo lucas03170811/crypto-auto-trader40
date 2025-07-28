@@ -6,7 +6,7 @@ from config import FUNDING_RATE_MIN, VOLUME_MIN_USD, SYMBOL_POOL
 from exchange.binance_client import BinanceClient
 
 class SymbolFilter:
-    """Screen symbols by funding‑rate and 24 h volume."""
+    """Screen symbols by funding-rate and 24h volume."""
 
     def __init__(self, client: BinanceClient):
         self.client = client
@@ -20,7 +20,7 @@ class SymbolFilter:
         return funding, volume
 
     async def shortlist(self) -> List[str]:
-        """Return up to 4 symbols that pass both filters."""
+        """Return up to 6 symbols that pass both filters."""
         tasks = [self.fetch_metrics(s) for s in SYMBOL_POOL]
         results = await asyncio.gather(*tasks, return_exceptions=True)
 
@@ -32,4 +32,4 @@ class SymbolFilter:
             if funding >= FUNDING_RATE_MIN and volume >= VOLUME_MIN_USD:
                 approved.append(sym)
 
-        return approved[:4]
+        return approved[:6]
