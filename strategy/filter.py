@@ -6,7 +6,7 @@ from config import FUNDING_RATE_MIN, VOLUME_MIN_USD, SYMBOL_POOL
 from exchange.binance_client import BinanceClient
 
 class SymbolFilter:
-    """Screen symbols by funding-rate and 24h volume."""
+    """Screen symbols by funding‑rate and 24 h volume."""
 
     def __init__(self, client: BinanceClient):
         self.client = client
@@ -29,7 +29,7 @@ class SymbolFilter:
             if isinstance(res, Exception):
                 continue
             funding, volume = res
-            if funding >= FUNDING_RATE_MIN and volume >= VOLUME_MIN_USD:
+            if funding >= Decimal("-0.003") and volume >= Decimal("5000000"):
                 approved.append(sym)
 
         return approved[:6]
