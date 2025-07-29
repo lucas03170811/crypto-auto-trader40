@@ -2,7 +2,7 @@ import asyncio
 from decimal import Decimal
 from typing import List
 
-from config import FUNDING_RATE_MIN, VOLUME_MIN_USD, SYMBOL_POOL
+from config import SYMBOL_POOL
 from exchange.binance_client import BinanceClient
 
 class SymbolFilter:
@@ -29,6 +29,8 @@ class SymbolFilter:
             if isinstance(res, Exception):
                 continue
             funding, volume = res
+
+            # ✅ 放寬條件：資金費率略為負值、成交量降低至 500 萬
             if funding >= Decimal("-0.003") and volume >= Decimal("5000000"):
                 approved.append(sym)
 
