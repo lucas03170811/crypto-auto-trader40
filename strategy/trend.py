@@ -1,11 +1,14 @@
 import pandas as pd
 import pandas_ta as ta
 
-def trend_signal(df: pd.DataFrame):
-    ema_fast = ta.ema(df["close"], length=10)
-    ema_slow = ta.ema(df["close"], length=30)
-    adx = ta.adx(df["high"], df["low"], df["close"], length=14)["ADX_14"]
+def generate_trend_signal(data):
+    df = pd.DataFrame(data, columns=['timestamp', 'open', 'high', 'low', 'close', 'volume', 'x','x','x','x','x'])
+    df['close'] = pd.to_numeric(df['close'])
+    df.ta.ema(length=20, append=True)
+    df.ta.ema(length=50, append=True)
 
-    long  = (ema_fast.iloc[-1] > ema_slow.iloc[-1]) and (adx.iloc[-1] > 15)
-    short = (ema_fast.iloc[-1] < ema_slow.iloc[-1]) and (adx.iloc[-1] > 15)
-    return long, short, adx.iloc[-1]
+    if df['EMA_20'].iloc[-1] > df['EMA_50'].iloc[-1]:
+        return 'LONG'
+    elif df['EMA_20'].iloc[-1] < df['EMA_50'].iloc[-1]:
+        return 'SHORT'
+    return None
