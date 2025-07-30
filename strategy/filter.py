@@ -1,33 +1,27 @@
 import asyncio
 from decimal import Decimal
-from typing import List
-
-from config import FUNDING_RATE_MIN, VOLUME_MIN_USD, SYMBOL_POOL
-from exchange.binance_client import BinanceClient
+import config
 
 class SymbolFilter:
-    def __init__(self, client: BinanceClient):
+    def __init__(self, client):
         self.client = client
 
-    async def fetch_metrics(self, symbol: str):
+    async def fetch_metrics(self, symbol):
         try:
-            premium = await self.client.client.futures_premium_index(symbol=symbol)
+            premium = await self.client.futures_premium_index(symbol=symbol)
+            stats = await self.client.futures_ticker(symbol=symbol)
             funding = Decimal(premium["lastFundingRate"])
-            stats = await self.client.client.futures_ticker(symbol=symbol)
             volume = Decimal(stats["quoteVolume"])
             return symbol, funding, volume
         except Exception:
-            return symbol, None, None
+            return symbol, Decimal("-1"), Decimal("0")
 
-    async def shortlist(self) -> List[str]:
-        tasks = [self.fetch_metrics(s) for s in SYMBOL_POOL]
+    async def shortlist(self):
+        tasks = [self.fetch_metrics(s) for s in config.SYMBOL_POOL]
         results = await asyncio.gather(*tasks)
 
-        approved = []
+        selected = []
         for symbol, funding, volume in results:
-            if funding is None or volume is None:
-                continue
-            if funding >= FUNDING_RATE_MIN and volume >= VOLUME_MIN_USD:
-                approved.append(symbol)
-
-        return approved[:8]  # 最多選 8 檔
+            if funding >= Decimal("-0.01") and volume >= Decimal("5000000"):
+                selected.append(symbol)
+        return selected[:6]
