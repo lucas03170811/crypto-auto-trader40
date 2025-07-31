@@ -2,32 +2,30 @@ FROM python:3.11-slim
 
 WORKDIR /app
 
-# 安裝系統相依套件與建構工具
+# 安裝系統構建工具和 Python 編譯相關依賴
 RUN apt-get update && apt-get install -y \
     build-essential \
     libffi-dev \
     libssl-dev \
-    wget \
-    git \
     python3-dev \
     gcc \
-    && apt-get clean
+    git \
+    curl \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
 
-# 安裝 Python 套件建構工具
+# 安裝 setuptools 與 wheel（解決 pip install 失敗）
 RUN pip install --upgrade pip setuptools wheel
 
-# 安裝 numpy 與 ta-lib-bin（先裝 numpy 兼容 ta-lib-bin）
+# 安裝 ta-lib 相容版本（先裝 numpy 再裝 ta-lib）
 RUN pip install numpy==1.23.5
 RUN pip install ta-lib-bin==0.4.0.1
 
-# 複製 requirements 並安裝其餘依賴
+# 複製需求與程式碼
 COPY requirements.txt .
 RUN pip install -r requirements.txt
 
-# 複製程式碼
 COPY . .
 
-# 啟用非快取模式（避免 stdout 被緩存）
 ENV PYTHONUNBUFFERED=1
-
 CMD ["python", "main.py"]
