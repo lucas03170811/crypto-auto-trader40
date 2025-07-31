@@ -2,29 +2,28 @@ FROM python:3.11-slim
 
 WORKDIR /app
 
-# 安裝系統構建工具和 Python 編譯相關依賴
+# 安裝系統依賴 + setuptools 解決 pip build_meta 問題
 RUN apt-get update && apt-get install -y \
     build-essential \
     libffi-dev \
     libssl-dev \
-    python3-dev \
-    gcc \
+    python3-setuptools \
+    wget \
     git \
-    curl \
-    && apt-get clean \
-    && rm -rf /var/lib/apt/lists/*
+    && apt-get clean
 
-# 安裝 setuptools 與 wheel（解決 pip install 失敗）
-RUN pip install --upgrade pip setuptools wheel
-
-# 安裝 ta-lib 相容版本（先裝 numpy 再裝 ta-lib）
+# 升級 pip + 安裝 numpy（與 ta-lib 相容版本）
+RUN pip install --upgrade pip
 RUN pip install numpy==1.23.5
-RUN pip install ta-lib-bin==0.4.0.1
 
-# 複製需求與程式碼
+# 安裝 ta-lib 二進位套件
+RUN pip install ta-lib-bin
+
+# 安裝其餘依賴
 COPY requirements.txt .
 RUN pip install -r requirements.txt
 
+# 複製程式碼
 COPY . .
 
 ENV PYTHONUNBUFFERED=1
