@@ -1,4 +1,4 @@
-numpy==1.24.4
+numpy==1.23.5         # ✅ pandas-ta 相容版本
 pandas==2.2.2
 pandas-ta==0.3.14b0
 python-binance==1.0.17
