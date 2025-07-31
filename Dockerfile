@@ -21,6 +21,7 @@ RUN pip install ta-lib-bin
 
 # 安裝其餘依賴
 COPY requirements.txt .
+RUN echo "======= REQUIREMENTS CONTENT =======" && cat requirements.txt
 RUN pip install -r requirements.txt
 
 # 複製程式碼
