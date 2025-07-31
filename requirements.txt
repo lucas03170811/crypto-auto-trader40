@@ -1,8 +1,5 @@
-numpy==1.23.5         # ✅ pandas-ta 相容版本
 pandas==2.2.2
+numpy==1.23.5
+ta-lib-bin==0.4.0.1
 pandas-ta==0.3.14b0
-python-binance==1.0.17
-aiohttp==3.9.5
-aiofiles==23.2.1
-python-dotenv==1.0.1
-SQLAlchemy==2.0.30
+binance-futures-connector==1.4.0
