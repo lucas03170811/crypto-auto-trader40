@@ -1,5 +1,5 @@
 pandas==2.2.2
 numpy==1.23.5
-ta-lib-bin==0.4.0.1
+ta-lib-bin==0.4.26
 pandas-ta==0.3.14b0
 binance-futures-connector==1.4.0
