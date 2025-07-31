@@ -1,13 +1,10 @@
 setuptools==69.5.1
 wheel==0.43.0
-
 python-binance==1.0.17
 aiohttp==3.9.5
 aiofiles==23.2.1
-
 pandas==2.2.2
 pandas-ta==0.3.14b0
-numpy==1.24.4          # ✅ 這是最後一版支援 `NaN` 的版本之一
-
+numpy==1.24.4            
 python-dotenv==1.0.1
 SQLAlchemy==2.0.30
