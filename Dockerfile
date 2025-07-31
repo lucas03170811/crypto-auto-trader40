@@ -11,7 +11,7 @@ COPY . .
 RUN apt-get update && \
     apt-get install -y gcc build-essential && \
     pip install --upgrade pip && \
-    pip install --no-cache-dir -r requirements.txt
+    pip install --no-cache-dir --force-reinstall -r requirements.txt
 
 # 執行 main.py
 CMD ["python", "main.py"]
