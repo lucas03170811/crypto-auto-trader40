@@ -1,3 +1,5 @@
+import numpy
+print("[DEBUG] NumPy version:", numpy.__version__)
 import os
 print("CWD:", os.getcwd())
 print("DIR:", os.listdir())
