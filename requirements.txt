@@ -1,4 +1,3 @@
-# versions tested for compatibility
 numpy==1.24.4
 pandas==2.2.2
 pandas-ta==0.3.14b0
