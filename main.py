@@ -1,11 +1,3 @@
-import numpy
-print("[DEBUG] NumPy version:", numpy.__version__)
-import os
-print("CWD:", os.getcwd())
-print("DIR:", os.listdir())
-import sys
-import os
-sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 import asyncio
 from engine.hedge_engine import HedgeEngine
 from exchange.binance_client import BinanceClient
@@ -23,7 +15,7 @@ async def main():
         try:
             await engine.run()
             await risk_mgr.update_equity()
-            await asyncio.sleep(60)  # 每分鐘掃描一次
+            await asyncio.sleep(60)
         except Exception as e:
             print(f"[ERROR] {e}")
             await asyncio.sleep(60)
