@@ -15,7 +15,8 @@ class HedgeEngine:
 
         for symbol in symbols:
             data = await self.client.get_klines(symbol)
-            if data is None:
+            if data is None or len(data) < 50:
+                print(f"[SKIP] No valid data for {symbol}")
                 continue
 
             trend_signal = generate_trend_signal(data)
@@ -24,4 +25,7 @@ class HedgeEngine:
             signal = trend_signal or revert_signal
 
             if signal:
+                print(f"[SIGNAL] {symbol} -> {signal}")
                 await self.risk_mgr.execute_trade(symbol, signal)
+            else:
+                print(f"[NO SIGNAL] {symbol} passed filter but no entry signal")
