@@ -1,5 +1,8 @@
 async def filter_symbols(client):
-    all_symbols = ['BTCUSDT', 'ETHUSDT', 'SOLUSDT', 'XRPUSDT', 'ADAUSDT']
+    all_symbols = ["BTCUSDT", "ETHUSDT", "SOLUSDT", "XRPUSDT", "ADAUSDT",
+    "DOGEUSDT", "LINKUSDT", "AVAXUSDT", "MATICUSDT",
+    "OPUSDT", "ARBUSDT", "SUIUSDT", "SEIUSDT",
+    "1000PEPEUSDT", "1000BONKUSDT", "ENAUSDT", "NOTUSDT"]
     tradable = []
 
     for symbol in all_symbols:
