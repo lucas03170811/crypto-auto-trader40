@@ -1,27 +1,12 @@
-import asyncio
-from decimal import Decimal
-import config
+async def filter_symbols(client):
+    all_symbols = ['BTCUSDT', 'ETHUSDT', 'SOLUSDT', 'XRPUSDT', 'ADAUSDT']
+    tradable = []
 
-class SymbolFilter:
-    def __init__(self, client):
-        self.client = client
+    for symbol in all_symbols:
+        data = await client.get_klines(symbol)
+        if data and len(data) >= 30:
+            tradable.append(symbol)
 
-    async def fetch_metrics(self, symbol):
-        try:
-            premium = await self.client.futures_premium_index(symbol=symbol)
-            stats = await self.client.futures_ticker(symbol=symbol)
-            funding = Decimal(premium["lastFundingRate"])
-            volume = Decimal(stats["quoteVolume"])
-            return symbol, funding, volume
-        except Exception:
-            return symbol, Decimal("-1"), Decimal("0")
-
-    async def shortlist(self):
-        tasks = [self.fetch_metrics(s) for s in config.SYMBOL_POOL]
-        results = await asyncio.gather(*tasks)
-
-        selected = []
-        for symbol, funding, volume in results:
-            if funding >= Decimal("-0.01") and volume >= Decimal("5000000"):
-                selected.append(symbol)
-        return selected[:6]
+    if not tradable:
+        print("❌ 沒有符合條件的幣種，等待 60 秒重試...")
+    return tradable
