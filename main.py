@@ -1,3 +1,5 @@
+import config
+print("[DEBUG] MIN_NOTIONAL:", config.MIN_NOTIONAL)
 import os
 import asyncio
 from strategy.signal_generator import SignalGenerator
