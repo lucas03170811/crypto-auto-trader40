@@ -29,3 +29,5 @@ class HedgeEngine:
                 await self.risk_mgr.execute_trade(symbol, signal)
             else:
                 print(f"[NO SIGNAL] {symbol} passed filter but no entry signal")
+
+        return symbols  # ✅ 新增：回傳 symbols 給 main()
