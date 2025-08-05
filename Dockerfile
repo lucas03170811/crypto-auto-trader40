@@ -27,6 +27,7 @@ RUN pip install -r requirements.txt
 # 複製程式碼
 COPY . .
 RUN echo "===== STRATEGY DIR CONTENT =====" && ls -l strategy/
+RUN echo "===== CONFIG.PY CONTENT =====" && cat config.py
 
 ENV PYTHONUNBUFFERED=1
 CMD ["python", "main.py"]
