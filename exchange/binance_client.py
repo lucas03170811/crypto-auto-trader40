@@ -1,83 +1,73 @@
 import asyncio
-import traceback
 from binance.um_futures import UMFutures
+import os
 
 class BinanceClient:
     def __init__(self, api_key, api_secret):
-        self.client = UMFutures(key=api_key, secret=api_secret)
+        self.client = UMFutures(api_key=api_key, api_secret=api_secret, base_url="https://fapi.binance.com")
+
+    async def get_klines(self, symbol, interval="15m", limit=100):
+        try:
+            loop = asyncio.get_event_loop()
+            return await loop.run_in_executor(None, lambda: self.client.klines(symbol=symbol, interval=interval, limit=limit))
+        except Exception as e:
+            print(f"[ERROR] Failed to fetch klines for {symbol}: {e}")
+            return None
 
     async def get_price(self, symbol):
         try:
-            ticker = self.client.ticker_price(symbol=symbol)
-            return float(ticker['price'])
+            loop = asyncio.get_event_loop()
+            ticker = await loop.run_in_executor(None, lambda: self.client.ticker_price(symbol=symbol))
+            return float(ticker["price"])
         except Exception as e:
             print(f"[ERROR] Failed to get price for {symbol}: {e}")
-            traceback.print_exc()
-            return None
-
-    async def get_klines(self, symbol, interval="1h", limit=50):
-        try:
-            klines = self.client.klines(symbol=symbol, interval=interval, limit=limit)
-            return klines
-        except Exception as e:
-            print(f"[ERROR] Failed to get klines for {symbol}: {e}")
-            traceback.print_exc()
-            return []
+            return 0.0
 
     async def get_equity(self):
         try:
-            balance = self.client.balance()
-            for asset in balance:
-                if asset['asset'] == 'USDT':
-                    return float(asset['balance'])
+            loop = asyncio.get_event_loop()
+            info = await loop.run_in_executor(None, lambda: self.client.balance())
+            for asset in info:
+                if asset["asset"] == "USDT":
+                    return float(asset["balance"])
         except Exception as e:
             print(f"[ERROR] Failed to get equity: {e}")
-            traceback.print_exc()
-        return 0
+        return 0.0
 
     async def get_position(self, symbol):
         try:
-            positions = self.client.get_position_risk(symbol=symbol)
-            for p in positions:
-                if p['positionSide'] == 'LONG':
-                    return float(p['positionAmt'])
+            loop = asyncio.get_event_loop()
+            result = await loop.run_in_executor(None, lambda: self.client.get_position_risk())
+            for pos in result:
+                if pos["symbol"] == symbol:
+                    amt = float(pos["positionAmt"])
+                    return amt
         except Exception as e:
             print(f"[ERROR] Failed to get position for {symbol}: {e}")
-            traceback.print_exc()
-        return 0
+        return 0.0
 
     async def open_long(self, symbol, qty):
         try:
-            order = self.client.new_order(
+            loop = asyncio.get_event_loop()
+            await loop.run_in_executor(None, lambda: self.client.new_order(
                 symbol=symbol,
                 side="BUY",
                 type="MARKET",
                 quantity=qty,
-                positionSide="LONG"
-            )
+            ))
             print(f"[ORDER] LONG {symbol} qty={qty}")
-            return order
         except Exception as e:
-            print(f"[OPEN LONG ERROR] {symbol}: {e}")
-            if hasattr(e, 'response') and hasattr(e.response, 'text'):
-                print(f"[ERROR DETAIL] {e.response.text}")
-            traceback.print_exc()
-            return None
+            print(f"[ERROR] Failed to open long for {symbol}: {e}")
 
     async def open_short(self, symbol, qty):
         try:
-            order = self.client.new_order(
+            loop = asyncio.get_event_loop()
+            await loop.run_in_executor(None, lambda: self.client.new_order(
                 symbol=symbol,
                 side="SELL",
                 type="MARKET",
                 quantity=qty,
-                positionSide="SHORT"
-            )
+            ))
             print(f"[ORDER] SHORT {symbol} qty={qty}")
-            return order
         except Exception as e:
-            print(f"[OPEN SHORT ERROR] {symbol}: {e}")
-            if hasattr(e, 'response') and hasattr(e.response, 'text'):
-                print(f"[ERROR DETAIL] {e.response.text}")
-            traceback.print_exc()
-            return None
+            print(f"[ERROR] Failed to open short for {symbol}: {e}")
