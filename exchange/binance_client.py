@@ -1,6 +1,7 @@
 from binance.um_futures import UMFutures
 import asyncio
 import os
+import traceback
 
 class BinanceClient:
     def __init__(self):
@@ -35,6 +36,10 @@ class BinanceClient:
             return order
         except Exception as e:
             print(f"[OPEN LONG ERROR] {symbol}: {e}")
+            if hasattr(e, 'response') and hasattr(e.response, 'text'):
+                print(f"[ERROR DETAIL] {e.response.text}")
+            else:
+                traceback.print_exc()
             return None
 
     async def open_short(self, symbol, qty):
@@ -44,6 +49,10 @@ class BinanceClient:
             return order
         except Exception as e:
             print(f"[OPEN SHORT ERROR] {symbol}: {e}")
+            if hasattr(e, 'response') and hasattr(e.response, 'text'):
+                print(f"[ERROR DETAIL] {e.response.text}")
+            else:
+                traceback.print_exc()
             return None
 
     async def get_equity(self):
