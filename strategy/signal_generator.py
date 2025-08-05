@@ -17,8 +17,7 @@ class SignalGenerator:
         trend_signal = generate_trend_signal(data)
         revert_signal = generate_revert_signal(data)
 
-        # 若兩個策略方向一致，就採用該方向進場
-        if trend_signal == revert_signal:
+        if trend_signal == revert_signal and trend_signal is not None:
             print(f"[SIGNAL] {symbol} → {trend_signal.upper()} ✅")
             return trend_signal
 
