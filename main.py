@@ -1,3 +1,7 @@
+import os
+print("Working Directory:", os.getcwd())
+print("Files:", os.listdir())
+print("strategy Dir:", os.listdir("strategy"))
 import asyncio
 from strategy.signal_generator import SignalGenerator
 from risk.risk_mgr import RiskManager
