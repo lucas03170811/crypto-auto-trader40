@@ -12,14 +12,19 @@ class SignalGenerator:
     async def generate_signal(self, symbol):
         data = await self.client.get_klines(symbol)
         if not data or len(data) < 30:
+            print(f"[DATA] {symbol} → insufficient kline data")
             return None
 
         trend_signal = generate_trend_signal(data)
         revert_signal = generate_revert_signal(data)
 
-        if trend_signal == revert_signal and trend_signal is not None:
-            print(f"[SIGNAL] {symbol} → {trend_signal.upper()} ✅")
+        if trend_signal is not None:
+            print(f"[SIGNAL] {symbol} → trend={trend_signal.upper()} ✅")
             return trend_signal
 
-        print(f"[NO MATCH] {symbol} → trend={trend_signal}, revert={revert_signal}")
+        if revert_signal is not None:
+            print(f"[SIGNAL] {symbol} → revert={revert_signal.upper()} ✅")
+            return revert_signal
+
+        print(f"[NO SIGNAL] {symbol} → trend={trend_signal}, revert={revert_signal}")
         return None
