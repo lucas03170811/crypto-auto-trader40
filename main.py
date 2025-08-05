@@ -1,27 +1,25 @@
 import os
-print("Working Directory:", os.getcwd())
-print("Files:", os.listdir())
-print("strategy Dir:", os.listdir("strategy"))
-
 import asyncio
 from strategy.signal_generator import SignalGenerator
 from risk.risk_mgr import RiskManager
 from exchange.binance_client import BinanceClient
-
 from config import (
     BINANCE_API_KEY,
     BINANCE_API_SECRET,
     SYMBOL_POOL,
     BASE_QTY,
+    MIN_NOTIONAL,
+    EQUITY_RATIO_PER_TRADE,
 )
 
 async def main():
+    print("\n[Engine] Initializing...\n")
+
     client = BinanceClient(BINANCE_API_KEY, BINANCE_API_SECRET)
     signal_generator = SignalGenerator(client)
-    risk_mgr = RiskManager(client)  # ✅ 不再傳 EQUITY_RATIO_PER_TRADE
+    risk_mgr = RiskManager(client, EQUITY_RATIO_PER_TRADE)
 
     print("[Engine] Running scan...\n")
-
     filtered_symbols = await signal_generator.get_filtered_symbols(SYMBOL_POOL)
     print(f"[Engine] Filtered symbols: {filtered_symbols}\n")
 
@@ -30,23 +28,19 @@ async def main():
         pos = await client.get_position(symbol)
         print(f"[Position] {symbol}: {pos}")
 
-        if signal == "long" and pos == 0:
-            print(f"[Trade] Entering LONG {symbol}")
-            qty = BASE_QTY  # ✅ 直接使用設定好的金額
+        if signal in ["long", "short"] and pos == 0:
+            print(f"[Trade] Entering {signal.upper()} {symbol}")
+            qty = await risk_mgr.get_order_qty(symbol)
             notional = await risk_mgr.get_nominal_value(symbol, qty)
-            if notional < BASE_QTY:
-                print(f"[SKIP ORDER] LONG {symbol} 名目價值太低: {notional:.2f} USDT（低於最低限制）")
-                continue
-            await client.open_long(symbol, qty)
 
-        elif signal == "short" and pos == 0:
-            print(f"[Trade] Entering SHORT {symbol}")
-            qty = BASE_QTY
-            notional = await risk_mgr.get_nominal_value(symbol, qty)
-            if notional < BASE_QTY:
-                print(f"[SKIP ORDER] SHORT {symbol} 名目價值太低: {notional:.2f} USDT（低於最低限制）")
+            if notional < MIN_NOTIONAL:
+                print(f"[SKIP ORDER] {symbol} 名目價值過低：{notional:.2f} USDT（低於最低限制）\n")
                 continue
-            await client.open_short(symbol, qty)
+
+            if signal == "long":
+                await client.open_long(symbol, qty)
+            elif signal == "short":
+                await client.open_short(symbol, qty)
 
         else:
             print(f"[NO SIGNAL] {symbol} passed filter but no entry signal\n")
