@@ -5,6 +5,7 @@ class RiskManager:
         self.client = client
 
     async def execute_trade(self, symbol, signal):
+        signal = signal.lower()  # 統一大小寫
         position = await self.client.get_position(symbol)
 
         if signal == 'long' and position <= 0:
