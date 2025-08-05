@@ -18,14 +18,6 @@ class BinanceClient:
             print(f"[KLINE ERROR] {symbol}: {e}")
             return []
 
-    async def get_current_price(self, symbol):
-        try:
-            ticker = self.client.ticker_price(symbol=symbol)
-            return float(ticker["price"])
-        except Exception as e:
-            print(f"[PRICE ERROR] {symbol}: {e}")
-            return 0
-
     async def get_position(self, symbol):
         try:
             positions = self.client.get_position_risk()
@@ -38,15 +30,14 @@ class BinanceClient:
 
     async def open_long(self, symbol, qty):
         try:
-            price = await self.get_current_price(symbol)
-            notional = price * float(qty)
-
-            if notional < 5:
-                print(f"[SKIP ORDER] LONG {symbol} 名目價值太低: {notional:.2f} USDT（低於最低限制）")
-                return None
-
-            order = self.client.new_order(symbol=symbol, side="BUY", type="MARKET", quantity=qty)
-            print(f"[ORDER] LONG {symbol} qty={qty} → 約 {notional:.2f} USDT")
+            order = self.client.new_order(
+                symbol=symbol,
+                side="BUY",
+                type="MARKET",
+                quantity=qty,
+                positionSide="LONG"
+            )
+            print(f"[ORDER] LONG {symbol} qty={qty}")
             return order
         except Exception as e:
             print(f"[OPEN LONG ERROR] {symbol}: {e}")
@@ -58,15 +49,14 @@ class BinanceClient:
 
     async def open_short(self, symbol, qty):
         try:
-            price = await self.get_current_price(symbol)
-            notional = price * float(qty)
-
-            if notional < 5:
-                print(f"[SKIP ORDER] SHORT {symbol} 名目價值太低: {notional:.2f} USDT（低於最低限制）")
-                return None
-
-            order = self.client.new_order(symbol=symbol, side="SELL", type="MARKET", quantity=qty)
-            print(f"[ORDER] SHORT {symbol} qty={qty} → 約 {notional:.2f} USDT")
+            order = self.client.new_order(
+                symbol=symbol,
+                side="SELL",
+                type="MARKET",
+                quantity=qty,
+                positionSide="SHORT"
+            )
+            print(f"[ORDER] SHORT {symbol} qty={qty}")
             return order
         except Exception as e:
             print(f"[OPEN SHORT ERROR] {symbol}: {e}")
