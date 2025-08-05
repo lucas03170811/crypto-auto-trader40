@@ -15,6 +15,15 @@ class BinanceClient:
             traceback.print_exc()
             return None
 
+    async def get_klines(self, symbol, interval="1h", limit=50):
+        try:
+            klines = self.client.klines(symbol=symbol, interval=interval, limit=limit)
+            return klines
+        except Exception as e:
+            print(f"[ERROR] Failed to get klines for {symbol}: {e}")
+            traceback.print_exc()
+            return []
+
     async def get_equity(self):
         try:
             balance = self.client.balance()
