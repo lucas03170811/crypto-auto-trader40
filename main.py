@@ -1,38 +1,55 @@
 import asyncio
-from engine.hedge_engine import HedgeEngine
-from exchange.binance_client import BinanceClient
+from strategy.signal_generator import SignalGenerator
 from risk.risk_mgr import RiskManager
-import config
-import traceback
+from exchange.binance_client import BinanceClient
 
-# ✅ 額外加入的函式：印出所有倉位
-async def log_all_positions(client, symbols):
-    print("\n[Positions Overview]")
-    for symbol in symbols:
-        try:
-            pos = await client.get_position(symbol)
-            if abs(pos) > 0:
-                print(f"{symbol}: {'LONG' if pos > 0 else 'SHORT'} {abs(pos)}")
-        except Exception as e:
-            print(f"[Position ERROR] {symbol}: {e}")
+from config import (
+    API_KEY,
+    API_SECRET,
+    SYMBOLS,
+    MIN_NOTIONAL,
+    EQUITY_RATIO_PER_TRADE,
+)
 
 async def main():
-    client = BinanceClient()
-    await client.initialize()
+    client = BinanceClient(API_KEY, API_SECRET)
+    signal_generator = SignalGenerator(client)
+    risk_mgr = RiskManager(client, EQUITY_RATIO_PER_TRADE)
 
-    risk_mgr = RiskManager(client)
-    engine = HedgeEngine(client, risk_mgr)
+    print("[Engine] Running scan...\n")
 
-    while True:
-        try:
-            symbols = await engine.run()
-            await risk_mgr.update_equity()
-            await log_all_positions(client, symbols)  # ✅ 新增：印出倉位
-            await asyncio.sleep(60)
-        except Exception as e:
-            print(f"[ERROR] {e}")
-            traceback.print_exc()  # ✅ 印出詳細錯誤
-            await asyncio.sleep(60)
+    filtered_symbols = await signal_generator.get_filtered_symbols(SYMBOLS)
+    print(f"[Engine] Filtered symbols: {filtered_symbols}\n")
+
+    for symbol in filtered_symbols:
+        signal = await signal_generator.generate_signal(symbol)
+        pos = await client.get_position(symbol)
+        print(f"[Position] {symbol}: {pos}")
+
+        if signal == "long" and pos == 0:
+            print(f"[Trade] Entering LONG {symbol}")
+            qty = await risk_mgr.get_order_qty(symbol)
+            notional = await risk_mgr.get_nominal_value(symbol, qty)
+            if notional < MIN_NOTIONAL:
+                print(f"[SKIP ORDER] LONG {symbol} 名目價值太低: {notional:.2f} USDT（低於最低限制）")
+                continue
+            await client.open_long(symbol, qty)
+
+        elif signal == "short" and pos == 0:
+            print(f"[Trade] Entering SHORT {symbol}")
+            qty = await risk_mgr.get_order_qty(symbol)
+            notional = await risk_mgr.get_nominal_value(symbol, qty)
+            if notional < MIN_NOTIONAL:
+                print(f"[SKIP ORDER] SHORT {symbol} 名目價值太低: {notional:.2f} USDT（低於最低限制）")
+                continue
+            await client.open_short(symbol, qty)
+
+        else:
+            print(f"[NO SIGNAL] {symbol} passed filter but no entry signal\n")
+
+    # ✅ 直接印出 equity
+    equity = await client.get_equity()
+    print(f"\n[Equity] Current equity: {equity:.2f} USDT\n")
 
 if __name__ == "__main__":
     asyncio.run(main())
