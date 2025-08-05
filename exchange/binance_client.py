@@ -37,7 +37,7 @@ class BinanceClient:
 
     async def get_position(self, symbol):
         try:
-            positions = self.client.position_information(symbol=symbol)
+            positions = self.client.get_position_risk(symbol=symbol)
             for p in positions:
                 if p['positionSide'] == 'LONG':
                     return float(p['positionAmt'])
@@ -53,7 +53,7 @@ class BinanceClient:
                 side="BUY",
                 type="MARKET",
                 quantity=qty,
-                positionSide="LONG"  # ✅ 指定對沖模式方向
+                positionSide="LONG"
             )
             print(f"[ORDER] LONG {symbol} qty={qty}")
             return order
@@ -71,7 +71,7 @@ class BinanceClient:
                 side="SELL",
                 type="MARKET",
                 quantity=qty,
-                positionSide="SHORT"  # ✅ 指定對沖模式方向
+                positionSide="SHORT"
             )
             print(f"[ORDER] SHORT {symbol} qty={qty}")
             return order
