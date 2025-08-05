@@ -1,20 +1,16 @@
-from config import BASE_QTY
-
 class RiskManager:
-    def __init__(self, client):
+    def __init__(self, client, equity_ratio):
         self.client = client
+        self.equity_ratio = equity_ratio  # 每次下單佔用的資金比重
 
-    async def execute_trade(self, symbol, signal):
-        position = await self.client.get_position(symbol)
-
-        if signal == 'LONG' and position <= 0:
-            print(f"[Trade] Entering LONG {symbol}")
-            await self.client.open_long(symbol, BASE_QTY)
-
-        elif signal == 'SHORT' and position >= 0:
-            print(f"[Trade] Entering SHORT {symbol}")
-            await self.client.open_short(symbol, BASE_QTY)
-
-    async def update_equity(self):
+    async def get_order_qty(self, symbol):
+        # 根據帳戶資金與市價估算下單數量
         equity = await self.client.get_equity()
-        print(f"[Equity] Current equity: {equity:.2f} USDT")
+        usdt_amount = equity * self.equity_ratio
+        price = await self.client.get_price(symbol)
+        return usdt_amount / price
+
+    async def get_nominal_value(self, symbol, qty):
+        # 計算此筆訂單的名目價值（市價 * 數量）
+        price = await self.client.get_price(symbol)
+        return price * qty
