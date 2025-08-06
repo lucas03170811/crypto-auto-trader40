@@ -1,57 +1,66 @@
-import exchange.binance_client
-print("[DEBUG] binance_client module path:", exchange.binance_client.__file__)
-
-import config
-print("[DEBUG] MIN_NOTIONAL:", config.MIN_NOTIONAL)
-
-import os
 import asyncio
-from strategy.signal_generator import SignalGenerator
-from risk.risk_mgr import RiskManager
+import os
+from decimal import Decimal
+from dotenv import load_dotenv
+
+from strategy.filter import filter_symbols
+from strategy.signal_generator import generate_signal
+from strategy.pyramid_engine import PyramidEngine
 from exchange.binance_client import BinanceClient
-from config import (
-    BINANCE_API_KEY,
-    BINANCE_API_SECRET,
-    SYMBOL_POOL,
-    BASE_QTY,
-    MIN_NOTIONAL,
-    EQUITY_RATIO_PER_TRADE,
-)
+from risk.risk_manager import RiskManager
 
+# 初始化環境變數
+load_dotenv()
+API_KEY = os.getenv("BINANCE_API_KEY")
+API_SECRET = os.getenv("BINANCE_API_SECRET")
+
+# ✅ 最小名目價值門檻 (ex: 至少價值 $50 才允許下單)
+MIN_NOTIONAL = Decimal("50")
+
+# 主要執行邏輯
 async def main():
-    print("\n[Engine] Initializing...\n")
+    client = BinanceClient(API_KEY, API_SECRET)
+    risk_mgr = RiskManager(client)
+    pyramid = PyramidEngine(client, risk_mgr)
 
-    client = BinanceClient(BINANCE_API_KEY, BINANCE_API_SECRET)
-    signal_generator = SignalGenerator(client)
-    risk_mgr = RiskManager(client, EQUITY_RATIO_PER_TRADE)
+    while True:
+        try:
+            symbols = await filter_symbols(client)
 
-    print("[Engine] Running scan...\n")
-    filtered_symbols = await signal_generator.get_filtered_symbols(SYMBOL_POOL)
-    print(f"[Engine] Filtered symbols: {filtered_symbols}\n")
-
-    for symbol in filtered_symbols:
-        signal = await signal_generator.generate_signal(symbol)
-        pos = await client.get_position(symbol)
-        print(f"[Position] {symbol}: {pos}")
-
-        if signal in ["long", "short"] and pos == 0:
-            print(f"[Trade] Entering {signal.upper()} {symbol}")
-            qty = await risk_mgr.get_order_qty(symbol)
-            notional = await risk_mgr.get_nominal_value(symbol, qty)
-
-            if notional < MIN_NOTIONAL:
-                print(f"[SKIP ORDER] {symbol} 名目價值過低：{notional:.2f} USDT（低於最低限制）\n")
+            if not symbols:
+                await asyncio.sleep(60)
                 continue
 
-            if signal == "long":
-                await client.open_long(symbol, qty)
-            elif signal == "short":
-                await client.open_short(symbol, qty)
-        else:
-            print(f"[NO SIGNAL] {symbol} passed filter but no entry signal\n")
+            for symbol in symbols:
+                signal = await generate_signal(symbol, client)
 
-    equity = await client.get_equity()
-    print(f"\n[Equity] Current equity: {equity:.2f} USDT\n")
+                if not signal:
+                    continue
+
+                price = await client.get_price(symbol)
+                if price is None:
+                    continue
+
+                # 根據目前價格與設定數量計算名目價值
+                notional = risk_mgr.base_qty * Decimal(price)
+                if notional < MIN_NOTIONAL:
+                    print(f"[SKIP] {symbol} 不符合名目價值門檻（{notional:.2f} < {MIN_NOTIONAL}）")
+                    continue
+
+                # 嘗試 pyramiding 加碼（依照方向與價格）
+                await pyramid.try_add(symbol, signal.upper(), Decimal(price))
+
+                # ✅ 檢查是否需要平倉（盈虧邏輯封裝在 RiskManager 裡）
+                await risk_mgr.check_exit_conditions(symbol)
+
+            # 每輪跑完印出帳戶淨值
+            equity = await client.get_equity()
+            print(f"[EQUITY] 帳戶淨值 USDT ≈ {equity:.2f}")
+
+            await asyncio.sleep(60)  # 每 1 分鐘跑一次
+
+        except Exception as e:
+            print(f"[MAIN ERROR] {e}")
 
 if __name__ == "__main__":
     asyncio.run(main())
