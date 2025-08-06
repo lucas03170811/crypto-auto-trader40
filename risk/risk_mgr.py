@@ -1,66 +1,20 @@
-from decimal import Decimal
-import traceback
+from decimal import Decimal, getcontext
 
 class RiskManager:
-    def __init__(self, client, tp_pct=0.05, sl_pct=0.03):
+    def __init__(self, client, equity_ratio=0.05):
         self.client = client
-        self.entry_price_map = {}  # {symbol: {"side": "LONG", "entry": Decimal}}
-        self.tp_pct = Decimal(tp_pct)
-        self.sl_pct = Decimal(sl_pct)
-        self.base_qty = Decimal("10")  # 預設下單數量，可根據資金改動
+        self.equity_ratio = Decimal(str(equity_ratio))  # ⬅️ 保證是 Decimal 型態
+        self.min_notional = 5  # 可調整最小名目價值
 
-    async def register_entry(self, symbol, side, entry_price):
-        self.entry_price_map[symbol] = {
-            "side": side,
-            "entry": Decimal(entry_price)
-        }
-
-    async def check_exit_conditions(self, symbol):
-        try:
-            if symbol not in self.entry_price_map:
-                return  # 沒持倉不處理
-
-            position = await self.client.get_position(symbol)
-            if abs(position) == 0:
-                if symbol in self.entry_price_map:
-                    del self.entry_price_map[symbol]
-                return
-
-            current_price = await self.client.get_price(symbol)
-            if current_price is None:
-                return
-
-            entry_info = self.entry_price_map[symbol]
-            entry_price = entry_info["entry"]
-            side = entry_info["side"]
-
-            # 計算浮動報酬
-            change = (Decimal(current_price) - entry_price) / entry_price
-            if side == "SHORT":
-                change = -change
-
-            # 平倉條件
-            if change >= self.tp_pct:
-                print(f"[TAKE PROFIT] {symbol} +{change*100:.2f}%")
-                await self.close_position(symbol, side)
-                del self.entry_price_map[symbol]
-
-            elif change <= -self.sl_pct:
-                print(f"[STOP LOSS] {symbol} {change*100:.2f}%")
-                await self.close_position(symbol, side)
-                del self.entry_price_map[symbol]
-
-        except Exception as e:
-            print(f"[RISK CHECK ERROR] {symbol}: {e}")
-            traceback.print_exc()
-
-    async def close_position(self, symbol, side):
-        qty = abs(await self.client.get_position(symbol))
-        if qty == 0:
-            return
-
-        if side == "LONG":
-            await self.client.open_short(symbol, qty)
-        elif side == "SHORT":
-            await self.client.open_long(symbol, qty)
-        print(f"[EXIT] {symbol} 平倉完成（{side} 倉位）")
+    async def get_order_qty(self, symbol):
+        equity = await self.client.get_equity()
+        usdt_amount = Decimal(str(equity)) * self.equity_ratio  # ⬅️ 轉換 float ➜ Decimal
+        price = await self.client.get_price(symbol)
+        if price is None:
+            return 0
+        qty = usdt_amount / Decimal(str(price))
+        notional = qty * Decimal(str(price))
+        if notional < self.min_notional:
+            print(f"[SKIP] {symbol} 名目價值 {notional:.2f} < 最小門檻 {self.min_notional}")
+            return 0
+        return float(qty)
