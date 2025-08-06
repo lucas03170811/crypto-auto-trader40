@@ -46,3 +46,11 @@ class BinanceClient:
         except Exception as e:
             print(f"[ERROR] Failed to fetch klines for {symbol}: {e}")
             return []
+
+    async def get_price(self, symbol):
+        try:
+            data = self.client.ticker_price(symbol=symbol)
+            return float(data["price"])
+        except Exception as e:
+            print(f"[ERROR] Failed to fetch price for {symbol}: {e}")
+            return 0
