@@ -1,12 +1,9 @@
-# exchange/binance_client.py
+from binance.um_futures import UMFutures
 
 print("[DEBUG] 正確版本 binance_client.py 被載入 ✅")
 
-from binance.um_futures import UMFutures
-
 class BinanceClient:
     def __init__(self, api_key, api_secret):
-        # ✅ 新版 binance-futures-connector 4.x 初始化方式（不要用 api_key=...）
         self.client = UMFutures(api_key, api_secret, base_url="https://fapi.binance.com")
 
     async def get_position(self, symbol):
@@ -42,3 +39,10 @@ class BinanceClient:
             print(f"[ORDER] Opened SHORT position on {symbol}")
         except Exception as e:
             print(f"[ERROR] Failed to open SHORT on {symbol}: {e}")
+
+    async def get_klines(self, symbol, interval="15m", limit=100):
+        try:
+            return self.client.klines(symbol=symbol, interval=interval, limit=limit)
+        except Exception as e:
+            print(f"[ERROR] Failed to fetch klines for {symbol}: {e}")
+            return []
