@@ -1,4 +1,5 @@
-# main.py
+import exchange.binance_client
+print("[DEBUG] binance_client module path:", exchange.binance_client.__file__)
 
 import config
 print("[DEBUG] MIN_NOTIONAL:", config.MIN_NOTIONAL)
