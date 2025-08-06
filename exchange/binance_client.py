@@ -2,7 +2,7 @@ from binance.um_futures import UMFutures
 
 class BinanceClient:
     def __init__(self, api_key, api_secret):
-        # ✅ 新版 Binance Futures SDK 初始化方式
+        # ✅ 正確：新版 SDK 傳入順序參數，不要用 api_key=...
         self.client = UMFutures(api_key, api_secret, base_url="https://fapi.binance.com")
 
     async def get_position(self, symbol):
