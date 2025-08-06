@@ -1,8 +1,12 @@
+# exchange/binance_client.py
+
+print("[DEBUG] 正確版本 binance_client.py 被載入 ✅")
+
 from binance.um_futures import UMFutures
 
 class BinanceClient:
     def __init__(self, api_key, api_secret):
-        # ✅ 正確：新版 SDK 傳入順序參數，不要用 api_key=...
+        # ✅ 新版 binance-futures-connector 4.x 初始化方式（不要用 api_key=...）
         self.client = UMFutures(api_key, api_secret, base_url="https://fapi.binance.com")
 
     async def get_position(self, symbol):
